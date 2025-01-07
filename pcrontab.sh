@@ -20,7 +20,8 @@ function match {
         
         '*/'*)
             echo "step $1"
-            step=${arg#*/}
+            x=$1
+            step=${x:2}
             ;;
         *)
             echo "unknown: $1"
