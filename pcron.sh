@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 检查用户权限
-source /home/jerrylmr/projet/match.sh
+source "./match.sh"
 function check_permission {
     user=$(whoami)
 
@@ -39,7 +39,7 @@ function check_permission {
 
 # 运行所有 tmp 中的任务
 function run_tasks {
-    tmp_dir="/home/jerrylmr/projet/tmp"
+    tmp_dir="./tmp"
     if [ ! -d "$tmp_dir" ]; then
         echo "任务目录不存在：$tmp_dir"
         exit 1
@@ -70,7 +70,7 @@ function run_tasks {
             if [ $matched -eq 1 ]; then
                 cmd="${fields[@]:6}" # 获取命令部分
                 echo "执行任务：$cmd"
-                eval "$cmd"  # 默认输出到标准输出
+                eval "$cmd" &  # 默认输出到标准输出,&后台非阻塞
             fi
         done < "$task_file"
     done

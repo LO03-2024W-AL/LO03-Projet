@@ -1,23 +1,23 @@
 #!/bin/bash
-
+source "./match.sh"
+PROFILE_DIR="tmp"
 #resolve arguments
 #pcrontab [-u user] {-l | -r | -e} manage the tasks
 #0 30 7 * * 1-5 commande
 if [ $# -gt 0 ];then
     if [ $1 == "-u" ];then
         user_name=$2
-        id $user_name
-        if [ $? -nq 0 ];then
+        id $user_name 2>/dev/null
+        if [ $? -ne 0 ];then
             echo "invalid username."
             exit 1
         fi
         shift 2
     else
-        user_name=$USER
+        user_name=$(whoami)
         echo "user:$user_name"
     fi
 fi
-
 
 case $1 in
     -e)
@@ -31,41 +31,27 @@ case $1 in
                 fi
                 shift
             done
-            echo "$cmd" >> "tmp/${user_name}Pcrontab" #
+            echo "$cmd" >> "${PROFILE_DIR}/${user_name}Pcrontab"
+            ;;
+    -l)
+            shift
+            if [ -r "${PROFILE_DIR}/${user_name}Pcrontab" ];then
+                cat "${PROFILE_DIR}/${user_name}Pcrontab"
+            else
+                echo "Error, profile does not exist or accessible."
+            fi
+            ;;
+    -r)
+            shift
+            if [ -f "${PROFILE_DIR}/${user_name}Pcrontab" ];then
+                if [ $(whoami)=="root" ]||[ $(whoami)==$user_name ];then
+                    rm -f "${PROFILE_DIR}/${user_name}Pcrontab"
+                    echo "remove: " "${PROFILE_DIR}/${user_name}Pcrontab"
+                fi
+            fi
             ;;
     -*|--*)  # get unknown args
             echo "unknown args: $1"
             exit 1
             ;;
 esac
-
-function main {
-    while true;do    
-        for usr in $(ls "tmp");do
-            current_time=$(date "+%S %M %H %d %m %u")
-            while read -r line;do
-                IFS=' ' read -r -a ligne <<< "$line"
-                #echo "$*"
-                m=0
-                for val in $current_time;do
-                    match "${ligne[$m]}" "$val"
-                    if [ $? -eq 1 ];then
-                        ((m++))
-                    else
-                        break
-                    fi
-                done
-                if [ $m -eq 6 ];then
-                    cmd=""
-                    for (( i=6; i<${#ligne[@]}; i++ )); do
-                        cmd+="${ligne[$i]} "
-                    done
-                    echo "execute: $cmd"
-                    eval "$cmd" &
-                fi
-            done < "tmp/${usr}"
-            sleep 1
-        done
-    done
-}
-main
