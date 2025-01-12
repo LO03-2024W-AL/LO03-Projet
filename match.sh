@@ -28,9 +28,13 @@ function match {
         *:*)
             IFS=':' read -r -a values <<< "$1"
             #echo "${values[*]}"
-            for val in $values ; do
-                if [ $val -eq $2 ];then
-                    return 1
+            for val in "${values[@]}" ; do
+                if [[ "$val" =~ ^[0-9]{1,2}$ ]]; then
+                    if [ $val -eq $2 ];then
+                        return 1
+                    fi
+                else
+                    return 2
                 fi
             done
             return 0
