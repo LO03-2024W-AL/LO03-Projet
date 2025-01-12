@@ -47,6 +47,14 @@ function run_tasks {
 
     # 获取当前时间（秒、分、小时、日、月、星期）
     current_time=($(date "+%S %M %H %d %m %u"))
+    echo ${current_time[@]}
+    
+    #星期日为0，秒数以15秒为1个单位
+    current_time[0]=$((current_time[0]/15))
+    if [ ${current_time[5]} -eq 7 ];then
+        current_time[5]=0
+    fi
+    echo ${current_time[@]}
 
     # 遍历 tmp 目录中的用户文件
     for task_file in "$tmp_dir"/*; do
@@ -82,7 +90,7 @@ function main {
 
     while true; do
         run_tasks
-        sleep 1 # 每秒检查一次任务
+        sleep 15 # 每15秒检查一次任务
     done
 }
 
