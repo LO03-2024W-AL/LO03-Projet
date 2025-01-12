@@ -19,19 +19,46 @@ if [ $# -gt 0 ];then
     fi
 fi
 
+#check illegal time values
+function check {
+    MAX_VALS=(3 59 23 31 12 6)
+    max_val=${MAX_VALS[(($2 - 1))]}
+    for num in $(echo "$1" | grep -o '[0-9]\+');do
+        if [ $num -gt $max_val ];then
+            return 2
+        fi
+        if [ $2 -eq 5 ];then
+            if [ $num -eq 0 ];then
+                return 2
+            fi
+        fi
+    done
+    return 0
+}
+
 case $1 in
     -e)
             shift
             cmd="$*"
+            if [ $# -lt 7 ];then
+                echo "too few arguments!"
+                exit 1
+            fi
             for(( i=1;i<=6;i++ ));do
-            match "$1" "0"
-                if [ $? -eq -1 ];then
-                    echo "error"
+                match "$1" "0"
+                if [ $? -eq 2 ];then
+                    echo "error,invalid format."
+                    exit 1
+                fi
+                check "$1" "$i"
+                if [ $? -eq 2 ];then
+                    echo "error,illegal value."
                     exit 1
                 fi
                 shift
             done
             echo "$cmd" >> "${PROFILE_DIR}/${user_name}Pcrontab"
+            echo "add task:" "$cmd"
             ;;
     -l)
             shift
