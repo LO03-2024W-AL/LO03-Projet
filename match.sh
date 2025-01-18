@@ -14,6 +14,32 @@ function match {
                 return 0
             fi
             ;;
+        *-*~*)
+            #exclude
+            IFS="-~" read -r -a values <<< "$1"
+            for val in "${values[@]}" ; do
+                if ! [[ "$val" =~ ^[0-9]{1,2}$ ]]; then
+                    return 2
+                fi
+            done
+            start=${values[0]}
+            end=${values[1]}
+            if [ $start -gt $end ];then
+                echo "start $start greater than end $end !"
+                return 2
+            fi
+            values=${values[@]:2}
+            if [ $2 -ge $start ]&&[ $2 -le $end ];then #check exclude values
+                for val in "${values[@]}"; do
+                    if [ $2 -eq $val ]; then
+                        return 0
+                    fi
+                done
+                return 1
+            else
+                return 0
+            fi
+            ;;
         [0-9]|[0-9][0-9])
             if [ $2 -eq $1 ];then
                 return 1

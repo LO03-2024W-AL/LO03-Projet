@@ -39,7 +39,8 @@ function check_permission {
 
 # 运行所有 tmp 中的任务
 function run_tasks {
-    tmp_dir="./tmp"
+    #SET TASK DIR
+    tmp_dir="/etc/pcron"
     if [ ! -d "$tmp_dir" ]; then
         echo "任务目录不存在：$tmp_dir"
         exit 1
@@ -47,7 +48,7 @@ function run_tasks {
 
     # 获取当前时间（秒、分、小时、日、月、星期）
     current_time=($(date "+%S %M %H %d %m %u"))
-    echo ${current_time[@]}
+    #echo ${current_time[@]}
     
     #星期日为0，秒数以15秒为1个单位
     current_time[0]=$((current_time[0]/15))
@@ -77,7 +78,8 @@ function run_tasks {
             # 如果匹配，执行命令
             if [ $matched -eq 1 ]; then
                 cmd="${fields[@]:6}" # 获取命令部分
-                echo "执行任务：$cmd"
+                echo "$(date)|$task_file|执行任务：$cmd"
+                echo "$(date)|$task_file|执行任务：$cmd">>"/var/log/pcron"
                 eval "$cmd" &  # 默认输出到标准输出,&后台非阻塞
             fi
         done < "$task_file"

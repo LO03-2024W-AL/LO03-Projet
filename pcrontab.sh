@@ -1,13 +1,17 @@
 #!/bin/bash
 source "./match.sh"
-PROFILE_DIR="tmp"
+PROFILE_DIR="/etc/pcron"
+if ! [ -d $PROFILE_DIR ];then
+    echo "mkdir $PROFILE_DIR"
+    mkdir $PROFILE_DIR
+fi
 #resolve arguments
 #pcrontab [-u user] {-l | -r | -e} manage the tasks
 #0 30 7 * * 1-5 commande
 if [ $# -gt 0 ];then
     if [ $1 == "-u" ];then
         user_name=$2
-        id $user_name 2>/dev/null
+        id $user_name &>/dev/null
         if [ $? -ne 0 ];then
             echo "invalid username."
             exit 1
