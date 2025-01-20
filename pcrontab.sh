@@ -42,47 +42,49 @@ function check {
 
 case $1 in
     -e)
-            shift
-            cmd="$*"
-            if [ $# -lt 7 ];then
-                echo "too few arguments!"
+        shift
+        cmd="$*"
+        if [ $(echo "$cmd" | wc -w) -lt 7 ]; then
+            echo "too few arguments!"
+            exit 1
+        fi
+
+        IFS=' ' read -r -a fields <<< "$cmd"
+        for ((i=0; i<6; i++)); do
+            match "${fields[i]}" "0"
+            if [ $? -eq 2 ]; then
+                echo "error,invalid format."
                 exit 1
             fi
-            for(( i=1;i<=6;i++ ));do
-                match "$1" "0"
-                if [ $? -eq 2 ];then
-                    echo "error,invalid format."
-                    exit 1
-                fi
-                check "$1" "$i"
-                if [ $? -eq 2 ];then
-                    echo "error,illegal value."
-                    exit 1
-                fi
-                shift
-            done
-            echo "$cmd" >> "${PROFILE_DIR}/${user_name}Pcrontab"
-            echo "add task:" "$cmd"
-            ;;
+            check "${fields[i]}" "$((i+1))"
+            if [ $? -eq 2 ]; then
+                echo "error,illegal value."
+                exit 1
+            fi
+        done
+        echo "$cmd" >> "${PROFILE_DIR}/pcrontab${user_name}"
+        echo "add task: $cmd"
+        ;;
     -l)
-            shift
-            if [ -r "${PROFILE_DIR}/${user_name}Pcrontab" ];then
-                cat "${PROFILE_DIR}/${user_name}Pcrontab"
-            else
-                echo "Error, profile does not exist or accessible."
-            fi
-            ;;
+        shift
+        if [ -r "${PROFILE_DIR}/pcrontab${user_name}" ];then
+            cat "${PROFILE_DIR}/pcrontab${user_name}"
+        else
+            echo "Error, profile does not exist or accessible."
+        fi
+        ;;
     -r)
-            shift
-            if [ -f "${PROFILE_DIR}/${user_name}Pcrontab" ];then
-                if [ $(whoami)=="root" ]||[ $(whoami)==$user_name ];then
-                    rm -f "${PROFILE_DIR}/${user_name}Pcrontab"
-                    echo "remove: " "${PROFILE_DIR}/${user_name}Pcrontab"
-                fi
+        shift
+        if [ -f "${PROFILE_DIR}/pcrontab${user_name}" ];then
+            if [ $(whoami)=="root" ]||[ $(whoami)==$user_name ];then
+                rm -f "${PROFILE_DIR}/pcrontab${user_name}"
+                echo "remove: " "${PROFILE_DIR}/pcrontab${user_name}"
             fi
-            ;;
+        fi
+        ;;
     -*|--*)  # get unknown args
-            echo "unknown args: $1"
-            exit 1
-            ;;
+        echo "unknown args: $1"
+        exit 1
+        ;;
 esac
+
