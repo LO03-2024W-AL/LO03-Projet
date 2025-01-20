@@ -1,14 +1,40 @@
-# match($1=proposed_time_value,$2=current_time_value)->state:int -1=err,0=false,1=true
+# match($1=proposed_time_value,$2=current_time_value)->state:int 2=err,0=false,1=true
 function match {
     case $1 in         
-        *-*)
+        [0-9]-[0-9]|[0-9][0-9]-[0-9]|[0-9]-[0-9][0-9]|[0-9][0-9]-[0-9][0-9])
             start=$(cut -d '-' -f 1 <<<$1)
             end=$(cut -d '-' -f 2 <<<$1)
             if [ $start -gt $end ];then
                 echo "start $start greater than end $end !"
-                return -1
+                return 2
             fi
-            if [ $2 -ge $start && $2 -le $end ];then
+            if [ $2 -ge $start ]&&[ $2 -le $end ];then
+                return 1
+            else
+                return 0
+            fi
+            ;;
+        *-*~*)
+            #exclude
+            IFS="-~" read -r -a values <<< "$1"
+            for val in "${values[@]}" ; do
+                if ! [[ "$val" =~ ^[0-9]{1,2}$ ]]; then
+                    return 2
+                fi
+            done
+            start=${values[0]}
+            end=${values[1]}
+            if [ $start -gt $end ];then
+                echo "start $start greater than end $end !"
+                return 2
+            fi
+            values=${values[@]:2}
+            if [ $2 -ge $start ]&&[ $2 -le $end ];then #check exclude values
+                for val in "${values[@]}"; do
+                    if [ $2 -eq $val ]; then
+                        return 0
+                    fi
+                done
                 return 1
             else
                 return 0
@@ -28,17 +54,22 @@ function match {
         *:*)
             IFS=':' read -r -a values <<< "$1"
             #echo "${values[*]}"
-            for val in $values ; do
-                if [ $val -eq $2 ];then
-                    return 1
+            for val in "${values[@]}" ; do
+                if [[ "$val" =~ ^[0-9]{1,2}$ ]]; then
+                    if [ $val -eq $2 ];then
+                        return 1
+                    fi
+                else
+                    return 2
                 fi
             done
             return 0
             ;;
         
-        '*/'*)
+        '*/'[1-9]|'*/'[0-9][0-9])
             #echo "step $1"
-            step=${arg#*/}
+            step=${1:2}
+            #echo $step
             if [ $(( $2 % step )) -eq 0 ];then
                     return 1
             fi
@@ -46,7 +77,7 @@ function match {
             ;;
         *)
             echo "unknown: $1"
-            return -1
+            return 2
             ;;
     esac
 }
