@@ -55,9 +55,7 @@ function run_tasks {
     if [ ${current_time[5]} -eq 7 ];then
         current_time[5]=0
     fi
-
     #echo ${current_time[@]}
-
 
     # 遍历 tmp 目录中的用户文件
     for task_file in "$tmp_dir"/*; do
@@ -80,13 +78,12 @@ function run_tasks {
             # 如果匹配，执行命令
             if [ $matched -eq 1 ]; then
                 cmd="${fields[@]:6}" # 获取命令部分
-
                 echo "executing the task:$cmd"
                 echo "$(date)|$task_file|executing the task:$cmd">>"/var/log/pcron"
-
                 eval "$cmd" &  # 默认输出到标准输出,&后台非阻塞
             fi
         done < "$task_file"
+        echo "No more tasks, done."
     done
 }
 
@@ -94,11 +91,10 @@ function run_tasks {
 function main {
     check_permission # 检查用户权限
 
-    run_tasks
-
-    echo "All tasks executed, exiting."
-    exit 0
-
+    while true; do
+        run_tasks
+        sleep 15 # 每15秒检查一次任务
+    done
 }
 
 main
