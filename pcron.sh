@@ -83,8 +83,9 @@ function run_tasks {
                 eval "$cmd" &  # 默认输出到标准输出,&后台非阻塞
             fi
         done < "$task_file"
-        echo "No more tasks, done."
+        echo "No more tasks from $task_file"
     done
+    echo "All tasks executed, done."
 }
 
 # 主函数入口
